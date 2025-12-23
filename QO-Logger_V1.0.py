@@ -754,8 +754,9 @@ class QO100Logger:
         
         for log in self.logs:
             lines.append(self.format_qso_adi(log))
+            lines.append("<EOR>")
+            lines.append("")
         
-        lines.append("<EOR>")
         return "\n".join(lines)
     
     def format_qso_adi(self, log):
@@ -838,8 +839,12 @@ class QO100Logger:
         prop_mode = "SAT"
         adi_parts.append(f"<PROP_MODE:{len(prop_mode)}>{prop_mode}")
         
-        # RX band (BAND_RX)
-        band_rx = "3CM" if 2400 <= float(log['other_freq']) <= 2500 else "13CM"
+        # RX band (BAND_RX) - based on downlink frequency (3CM if >= 10489)
+        try:
+            freq_rx = float(log['other_freq'])
+            band_rx = "3CM" if freq_rx >= 10489 else "13CM"
+        except:
+            band_rx = "13CM"
         adi_parts.append(f"<BAND_RX:{len(band_rx)}>{band_rx}")
         
         # Satellite mode
@@ -865,8 +870,6 @@ class QO100Logger:
         country = log.get('country', '')
         if country:
             adi_parts.append(f"<COUNTRY:{len(country)}>{country}")
-        
-        # End marker
         
         return "\n".join(adi_parts)
     
